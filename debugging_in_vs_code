@@ -1,0 +1,31 @@
+The July 2020 release of the Python Language Server for VS Code included an important update to their (beta) debugger, debugpy - It can now reverse attach to the VS Code debugger. This is useful as you can auto attach to the debugger during at least part of the 3ds Max startup to work on issues in your startup scripts. Here is how you can implement it.
+* Go to PyPi and get the correct debugpy for your version of Python. I've tested this with Python 3.7 in Max 2021. You can also use PIP from within the Max Python environment to get the debugpy package.
+* In a Python script somewhere, preferably early, in your startup sequence for Max add the following code:
+  import debugpy
+  debugpy.connect(("localhost ", 5768)) # You can make the port whatever you want but ensure it matches here and in VS Code
+
+In your workspace settings or folder settings in VS Code go to the debug tab edit the launch configurations. In the launch.json file add this block of JSON
+  {
+      "name": "Python: Debug 3ds Max Startup",
+     "type": "python",
+      "request": "attach",
+      "listen": {
+            "host": "127.0.0.1",
+            "port": 5678
+      },
+     "auto": true,
+  }
+
+* Save the launch.json file then pick that launch configuration in the 'Run' dropdown at the top of the debug panel and hit F5 to start it.
+* Launch 3ds Max
+
+At some point during the Max startup you will see the bottom status bar in VS Code change to an orange color indicating that the debugger has attached. You will also start to see Max startup information displayed in the output pane of VS Code.
+
+Some Notes:
+If VS Code is running but you do not have that debug configuration started and start 3ds Max, you will get this bit of warning text during Max startup. it is harmless.
+  Could not connect to localhost : 5678
+  Traceback (most recent call last):
+  ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+I have tried trapping that ConnectionRefusedError to no avail. I think the remote connection happens on a different thread. The debugpy debugger is beta so there are bound to be a few issues like this currently.
+If you install the AutoLaunch extension for VS Code then when you activate your 3ds Max workspace or folder it will automatically start the debug attach configuration. That is what the "auto": true line in the launch.json is for. If you don't have or don't want AutoLaunch that line will be safely ignored.
